@@ -1,0 +1,239 @@
+<!-- Mensaje global -->
+<div *ngIf="mensaje" class="alerta" [ngClass]="'alerta-' + tipoMensaje">
+  {{ mensaje }}
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     PANELES SIDE BY SIDE
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="doble-panel">
+
+  <!-- ── PANEL IZQUIERDO: Recepción OC ─────────────────────────────────── -->
+  <div class="panel">
+
+    <div class="panel-header">
+      <div class="panel-titulo">
+        <span class="panel-icono">📦</span>
+        <span>Recepción OC</span>
+      </div>
+      <div class="search-bar">
+        <input
+          type="number"
+          [(ngModel)]="folioRecibeoc"
+          placeholder="Folio..."
+          (keyup.enter)="buscarRecibeoc()"
+        />
+        <button class="btn btn-primary btn-sm" (click)="buscarRecibeoc()">Buscar</button>
+        <button class="btn btn-secondary btn-sm" (click)="limpiarRecibeoc()">✕</button>
+      </div>
+    </div>
+
+    <!-- Spinner -->
+    <div *ngIf="cargandoRecibeoc" class="spinner-wrap">
+      <span class="spinner"></span> Buscando...
+    </div>
+
+    <!-- Estado vacío inicial -->
+    <div *ngIf="!cargandoRecibeoc && !busquedaRecibeocHecha" class="estado-vacio">
+      🔍 Ingresa un folio para buscar recepciones
+    </div>
+
+    <!-- Sin resultados -->
+    <div *ngIf="!cargandoRecibeoc && busquedaRecibeocHecha && registros.length === 0" class="estado-vacio">
+      Sin resultados para el folio <strong>{{ folioRecibeoc }}</strong>
+    </div>
+
+    <!-- Tabla Recepción OC -->
+    <div class="tabla-wrap" *ngIf="!cargandoRecibeoc && registros.length > 0">
+      <div class="conteo">{{ registros.length }} registro(s) encontrado(s)</div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Folio</th>
+            <th>Reng.</th>
+            <th>Material</th>
+            <th>Proveedor</th>
+            <th>Cantidad</th>
+            <th>F. Recibida</th>
+            <th>Factura</th>
+            <th>Estatus</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of registros">
+            <td>{{ r.id }}</td>
+            <td>{{ r.folio }}</td>
+            <td>{{ r.renglon }}</td>
+            <td class="col-material" [title]="r.material">{{ r.material }}</td>
+            <td class="col-material" [title]="r.provedor">{{ r.provedor }}</td>
+            <td>{{ r.cantidad }}</td>
+            <td>{{ r.frecibida | date:'dd/MM/yy' }}</td>
+            <td>{{ r.factura }}</td>
+            <td>
+              <span class="badge" [ngClass]="r.estatus === 1 ? 'badge-ok' : 'badge-pend'">
+                {{ r.estatus === 1 ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="acciones">
+              <button class="btn btn-sm btn-edit" (click)="editar(r)" title="Editar">✏️</button>
+              <button class="btn btn-sm btn-delete" (click)="eliminar(r.id)" title="Eliminar">🗑️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /panel izquierdo -->
+
+  <!-- ── PANEL DERECHO: Orden de Compra ────────────────────────────────── -->
+  <div class="panel">
+
+    <div class="panel-header">
+      <div class="panel-titulo">
+        <span class="panel-icono">📋</span>
+        <span>Orden de Compra</span>
+      </div>
+      <div class="search-bar">
+        <input
+          type="number"
+          [(ngModel)]="folioOC"
+          placeholder="Folio..."
+          (keyup.enter)="buscarOC()"
+        />
+        <button class="btn btn-primary btn-sm" (click)="buscarOC()">Buscar</button>
+        <button class="btn btn-secondary btn-sm" (click)="limpiarOC()">✕</button>
+      </div>
+    </div>
+
+    <!-- Spinner -->
+    <div *ngIf="cargandoOC" class="spinner-wrap">
+      <span class="spinner"></span> Buscando...
+    </div>
+
+    <!-- Estado vacío inicial -->
+    <div *ngIf="!cargandoOC && !busquedaOCHecha" class="estado-vacio">
+      🔍 Ingresa un folio para buscar la orden de compra
+    </div>
+
+    <!-- Sin resultados -->
+    <div *ngIf="!cargandoOC && busquedaOCHecha && ordenesCompra.length === 0" class="estado-vacio">
+      Sin resultados para el folio <strong>{{ folioOC }}</strong>
+    </div>
+
+    <!-- Tabla Orden de Compra -->
+    <div class="tabla-wrap" *ngIf="!cargandoOC && ordenesCompra.length > 0">
+      <div class="conteo">{{ ordenesCompra.length }} renglón(es) encontrado(s)</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Folio</th>
+            <th>Reng.</th>
+            <th>Concepto</th>
+            <th>Proveedor</th>
+            <th>Cantidad</th>
+            <th>Precio</th>
+            <th>Total</th>
+            <th>F. Orden</th>
+            <th>F. Entrega</th>
+            <th>Depto</th>
+            <th>Estatus</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let o of ordenesCompra">
+            <td>{{ o.folio }}</td>
+            <td>{{ o.renglon }}</td>
+            <td class="col-material" [title]="o.concepto">{{ o.concepto }}</td>
+            <td class="col-material" [title]="o.provedor">{{ o.provedor }}</td>
+            <td>{{ o.cantidad }}</td>
+            <td>{{ o.precio | number:'1.2-2' }}</td>
+            <td>{{ o.ttotal | number:'1.2-2' }}</td>
+            <td>{{ o.forden | date:'dd/MM/yy' }}</td>
+            <td>{{ o.fentrega | date:'dd/MM/yy' }}</td>
+            <td>{{ o.depto }}</td>
+            <td>
+              <span class="badge"
+                [ngClass]="{
+                  'badge-ok':   o.estatus === 'A',
+                  'badge-pend': o.estatus === 'P',
+                  'badge-can':  o.estatus === 'C'
+                }">
+                {{ o.estatus === 'A' ? 'Activa' : o.estatus === 'C' ? 'Cancelada' : 'Pendiente' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /panel derecho -->
+
+</div><!-- /doble-panel -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MODAL EDICIÓN
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="registroEditando" (click)="cancelarEdicion()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h2>✏️ Editar Recepción #{{ registroEditando.id }}</h2>
+
+    <div class="form-grid">
+      <label>Folio
+        <input type="number" [(ngModel)]="registroEditando.folio" />
+      </label>
+      <label>Renglón
+        <input type="number" [(ngModel)]="registroEditando.renglon" />
+      </label>
+      <label>Cantidad
+        <input type="number" step="0.01" [(ngModel)]="registroEditando.cantidad" />
+      </label>
+      <label>Precio
+        <input type="number" step="0.00001" [(ngModel)]="registroEditando.precio" />
+      </label>
+      <label>Fecha Recibida
+        <input type="date" [(ngModel)]="registroEditando.frecibida" />
+      </label>
+      <label>Hora Recibida
+        <input type="time" [(ngModel)]="registroEditando.hrecibida" />
+      </label>
+      <label>Factura
+        <input type="text" maxlength="11" [(ngModel)]="registroEditando.factura" />
+      </label>
+      <label>Fecha Factura
+        <input type="date" [(ngModel)]="registroEditando.fechafac" />
+      </label>
+      <label>No. Semana
+        <input type="number" [(ngModel)]="registroEditando.nosemana" />
+      </label>
+      <label>U. Medida
+        <input type="text" maxlength="10" [(ngModel)]="registroEditando.umedida" />
+      </label>
+      <label>Material
+        <input type="text" maxlength="80" [(ngModel)]="registroEditando.material" />
+      </label>
+      <label>Proveedor
+        <input type="text" maxlength="50" [(ngModel)]="registroEditando.provedor" />
+      </label>
+      <label>Usuario
+        <input type="text" [(ngModel)]="registroEditando.usuario" />
+      </label>
+      <label>Estatus
+        <select [(ngModel)]="registroEditando.estatus">
+          <option [value]="1">Activo</option>
+          <option [value]="0">Inactivo</option>
+        </select>
+      </label>
+      <label class="full-width">Observación
+        <textarea maxlength="100" [(ngModel)]="registroEditando.observacion"></textarea>
+      </label>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
+      <button class="btn btn-primary" (click)="guardar()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
