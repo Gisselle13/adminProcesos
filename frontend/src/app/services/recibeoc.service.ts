@@ -5,7 +5,7 @@ import { RecibeOC } from '../models/interfaces';
 
 @Injectable({ providedIn: 'root' })
 export class RecibeocService {
-  private base = 'http://localhost:3000/api/recibeoc';
+private base = 'https://comando.mx:3450/api/recibeoc';
 
   constructor(private http: HttpClient) {}
 

@@ -8,7 +8,10 @@ const db = mysql.createConnection({
   insecureAuth: true
 });
 db.connect(err => {
-  if (err) throw err;
+  if (err) {
+    console.error('Error MySQL:', err);
+    return;
+  }
   console.log('✅ Conectado a servidor db');
 });
 

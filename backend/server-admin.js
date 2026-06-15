@@ -2,6 +2,8 @@ const express    = require('express');
 const bodyParser = require('body-parser');
 const cors       = require('cors');
 const { db }     = require('./db');
+const https = require('https');
+const fs = require('fs');
 
 const app = express();
 app.use(cors());
@@ -9,7 +11,6 @@ app.use(bodyParser.json());
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/recibeoc
-// Todos los registros de recibeoc con join a ordencompra
 // ─────────────────────────────────────────────────────────────────────────────
 app.get('/api/recibeoc', (req, res) => {
   const sql = `
@@ -34,28 +35,25 @@ app.get('/api/recibeoc', (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/recibeoc/folio/:folio
-// Registros de recibeoc filtrados por folio
 // ─────────────────────────────────────────────────────────────────────────────
 app.get('/api/recibeoc/folio/:folio', (req, res) => {
   const { folio } = req.params;
-  const sql = `
-    SELECT * FROM recibeoc
-    WHERE folio = ?
-    ORDER BY renglon
-  `;
-  db.query(sql, [folio], (err, rows) => {
-    if (err) return res.status(500).json(err);
-    res.json(rows);
-  });
+  db.query(
+    'SELECT * FROM recibeoc WHERE folio = ? ORDER BY renglon',
+    [folio],
+    (err, rows) => {
+      if (err) return res.status(500).json(err);
+      res.json(rows);
+    }
+  );
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/recibeoc/:id
-// Un registro por ID
 // ─────────────────────────────────────────────────────────────────────────────
 app.get('/api/recibeoc/:id', (req, res) => {
   const { id } = req.params;
-  db.query('SELECT * FROM recibeoc WHERE id = ?', [id], (err, rows) => {
+  db.query('SELECT * FROM recibeoc WHERE folio = ?', [id], (err, rows) => {
     if (err) return res.status(500).json(err);
     if (!rows.length) return res.status(404).json({ error: 'Registro no encontrado' });
     res.json(rows[0]);
@@ -64,7 +62,6 @@ app.get('/api/recibeoc/:id', (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PUT /api/recibeoc/:id
-// Actualizar un registro de recibeoc
 // ─────────────────────────────────────────────────────────────────────────────
 app.put('/api/recibeoc/:id', (req, res) => {
   const { id } = req.params;
@@ -117,21 +114,18 @@ app.put('/api/recibeoc/:id', (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DELETE /api/recibeoc/:id
-// Eliminar registro y guardarlo en recibeoc_backup
+// DELETE /api/recibeoc/:id  →  eliminar + backup
 // ─────────────────────────────────────────────────────────────────────────────
 app.delete('/api/recibeoc/:id', (req, res) => {
   const { id } = req.params;
   const eliminado_por = req.body.eliminado_por || 'sistema';
 
-  // 1. Buscar el registro original
   db.query('SELECT * FROM recibeoc WHERE id = ?', [id], (err, rows) => {
     if (err) return res.status(500).json(err);
     if (!rows.length) return res.status(404).json({ error: 'Registro no encontrado' });
 
     const r = rows[0];
 
-    // 2. Insertar en backup
     const sqlBackup = `
       INSERT INTO recibeoc_backup (
         id_original, folio, cantidad, frecibida, hrecibida,
@@ -151,7 +145,6 @@ app.delete('/api/recibeoc/:id', (req, res) => {
     ], (errBackup) => {
       if (errBackup) return res.status(500).json(errBackup);
 
-      // 3. Eliminar el original
       db.query('DELETE FROM recibeoc WHERE id = ?', [id], (errDel) => {
         if (errDel) return res.status(500).json(errDel);
         res.json({ message: 'Registro eliminado y respaldado correctamente' });
@@ -162,7 +155,6 @@ app.delete('/api/recibeoc/:id', (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/ordencompra
-// Todas las órdenes de compra
 // ─────────────────────────────────────────────────────────────────────────────
 app.get('/api/ordencompra', (req, res) => {
   db.query(
@@ -176,7 +168,6 @@ app.get('/api/ordencompra', (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/ordencompra/folio/:folio
-// Órdenes de compra por folio
 // ─────────────────────────────────────────────────────────────────────────────
 app.get('/api/ordencompra/folio/:folio', (req, res) => {
   const { folio } = req.params;
@@ -193,7 +184,6 @@ app.get('/api/ordencompra/folio/:folio', (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/ordencompra/estatus/:estatus
-// Órdenes de compra por estatus
 // ─────────────────────────────────────────────────────────────────────────────
 app.get('/api/ordencompra/estatus/:estatus', (req, res) => {
   const { estatus } = req.params;
@@ -208,14 +198,79 @@ app.get('/api/ordencompra/estatus/:estatus', (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// PUT /api/ordencompra/:folio/:renglon
+// Actualizar un renglón de orden de compra (PK compuesta: folio + renglon)
+// ─────────────────────────────────────────────────────────────────────────────
+app.put('/api/ordencompra/:folio/:renglon', (req, res) => {
+  const { folio, renglon } = req.params;
+  const {
+    forden, horden, fcancelada, motivocan, clavepro, concepto,
+    cantidad, precio, xtotal, moneda, estatus, provedor, nsemana,
+    observa1, observa2, observa3, genera, umedida, porcentaje,
+    subtotal, descuento, iva, ttotal, folioexp, fexpini, fexpfin, fentrega
+  } = req.body;
+
+  const sql = `
+    UPDATE ordencompra SET
+      forden      = ?,
+      horden      = ?,
+      fcancelada  = ?,
+      motivocan   = ?,
+      clavepro    = ?,
+      concepto    = ?,
+      cantidad    = ?,
+      precio      = ?,
+      xtotal      = ?,
+      moneda      = ?,
+      estatus     = ?,
+      provedor    = ?,
+      nsemana     = ?,
+      observa1    = ?,
+      observa2    = ?,
+      observa3    = ?,
+      genera      = ?,
+      umedida     = ?,
+      porcentaje  = ?,
+      subtotal    = ?,
+      descuento   = ?,
+      iva         = ?,
+      ttotal      = ?,
+      folioexp    = ?,
+      fexpini     = ?,
+      fexpfin     = ?,
+      fentrega    = ?
+    WHERE folio = ? AND renglon = ?
+  `;
+
+  db.query(sql, [
+    forden, horden, fcancelada, motivocan, clavepro, concepto,
+    cantidad, precio, xtotal, moneda, estatus, provedor, nsemana,
+    observa1, observa2, observa3, genera, umedida, porcentaje,
+    subtotal, descuento, iva, ttotal, folioexp, fexpini, fexpfin, fentrega,
+    folio, renglon
+  ], (err, result) => {
+    if (err) return res.status(500).json(err);
+    if (result.affectedRows === 0)
+      return res.status(404).json({ error: 'Renglón no encontrado' });
+    res.json({ message: 'Orden de compra actualizada correctamente' });
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Health check
 // ─────────────────────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-const PORT = 3000;
 
-app.listen(PORT, () => {
-  console.log(`🚀 AdminProcesos API corriendo en http://localhost:${PORT}`);
+const PORT = 3007;
+
+const options = {
+  key: fs.readFileSync('/etc/pki/tls/certs/comando.mx.key'),
+  cert: fs.readFileSync('/etc/pki/tls/certs/comando.mx.crt')
+};
+
+https.createServer(options, app).listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 AdminProcesos API HTTPS corriendo en https://0.0.0.0:${PORT}`);
 });

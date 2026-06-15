@@ -33,5 +33,5 @@ npm install
 ng serve
 ```
 
-La API corre en http://localhost:3000  
+La API corre en http://localhost:3007  
 El frontend corre en http://localhost:4200

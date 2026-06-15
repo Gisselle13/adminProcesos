@@ -5,8 +5,8 @@ import { OrdenCompra } from '../models/interfaces';
 
 @Injectable({ providedIn: 'root' })
 export class OrdencompraService {
-  private base = 'http://localhost:3000/api/ordencompra';
 
+private base = 'https://comando.mx:3450/api/ordencompra';
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<OrdenCompra[]> {
