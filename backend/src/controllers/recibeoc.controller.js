@@ -13,7 +13,7 @@ const getAll = async (req, res) => {
         AND r.clavedp = o.clavedp
         AND r.folio = o.folio
         AND r.renglon = o.renglon
-       ORDER BY r.id DESC`
+       ORDER BY r.folio DESC, r.renglon ASC`
     );
     res.json({ success: true, data: rows });
   } catch (err) {
@@ -22,25 +22,43 @@ const getAll = async (req, res) => {
   }
 };
 
-// ─── OBTENER UN REGISTRO POR ID ──────────────────────────────────────────────
-const getById = async (req, res) => {
-  const { id } = req.params;
+// ─── OBTENER UN REGISTRO POR FOLIO + RENGLON ────────────────────────────────
+const getByFolioRenglon = async (req, res) => {
+  const { folio, renglon } = req.params;
   try {
-    const [rows] = await pool.query('SELECT * FROM recibeoc WHERE id = ?', [id]);
+    const [rows] = await pool.query(
+      'SELECT * FROM BDCOMANDO.recibeoc WHERE folio = ? AND renglon = ?',
+      [folio, renglon]
+    );
     if (rows.length === 0)
       return res.status(404).json({ success: false, message: 'Registro no encontrado' });
     res.json({ success: true, data: rows[0] });
   } catch (err) {
-    console.error('getById recibeoc:', err);
+    console.error('getByFolioRenglon recibeoc:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ─── ACTUALIZAR REGISTRO ─────────────────────────────────────────────────────
+// ─── OBTENER TODOS LOS RENGLONES DE UN FOLIO ────────────────────────────────
+const getByFolio = async (req, res) => {
+  const { folio } = req.params;
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM BDCOMANDO.recibeoc WHERE folio = ? ORDER BY renglon',
+      [folio]
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error('getByFolio recibeoc:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── ACTUALIZAR REGISTRO POR FOLIO + RENGLON ────────────────────────────────
 const update = async (req, res) => {
-  const { id } = req.params;
+  const { folio, renglon } = req.params;
   const {
-    folio, cantidad, frecibida, hrecibida, renglon, factura,
+    cantidad, frecibida, hrecibida, factura,
     observacion, nosemana, umedida, precio, claveg, claves,
     clavedp, clavec, clavepro, material, provedor, usuario,
     horaini, horafin, fechafac, estatus
@@ -48,22 +66,22 @@ const update = async (req, res) => {
 
   try {
     const [result] = await pool.query(
-      `UPDATE recibeoc SET
-        folio = ?, cantidad = ?, frecibida = ?, hrecibida = ?,
-        renglon = ?, factura = ?, observacion = ?, nosemana = ?,
+      `UPDATE BDCOMANDO.recibeoc SET
+        cantidad = ?, frecibida = ?, hrecibida = ?,
+        factura = ?, observacion = ?, nosemana = ?,
         umedida = ?, precio = ?, claveg = ?, claves = ?,
         clavedp = ?, clavec = ?, clavepro = ?, material = ?,
         provedor = ?, usuario = ?, horaini = ?, horafin = ?,
         fechafac = ?, estatus = ?
-       WHERE id = ?`,
+       WHERE folio = ? AND renglon = ?`,
       [
-        folio, cantidad, frecibida, hrecibida,
-        renglon, factura, observacion, nosemana,
+        cantidad, frecibida, hrecibida,
+        factura, observacion, nosemana,
         umedida, precio, claveg, claves,
         clavedp, clavec, clavepro, material,
         provedor, usuario, horaini, horafin,
         fechafac, estatus,
-        id
+        folio, renglon
       ]
     );
 
@@ -77,16 +95,19 @@ const update = async (req, res) => {
   }
 };
 
-// ─── ELIMINAR REGISTRO (con backup automático) ───────────────────────────────
+// ─── ELIMINAR REGISTRO POR FOLIO + RENGLON (con backup automático) ──────────
 const remove = async (req, res) => {
-  const { id } = req.params;
+  const { folio, renglon } = req.params;
   const conn = await pool.getConnection();
 
   try {
     await conn.beginTransaction();
 
     // 1. Obtener el registro antes de eliminar
-    const [rows] = await conn.query('SELECT * FROM recibeoc WHERE id = ?', [id]);
+    const [rows] = await conn.query(
+      'SELECT * FROM BDCOMANDO.recibeoc WHERE folio = ? AND renglon = ?',
+      [folio, renglon]
+    );
     if (rows.length === 0) {
       await conn.rollback();
       return res.status(404).json({ success: false, message: 'Registro no encontrado' });
@@ -114,7 +135,10 @@ const remove = async (req, res) => {
     );
 
     // 3. Eliminar el registro original
-    await conn.query('DELETE FROM recibeoc WHERE id = ?', [id]);
+    await conn.query(
+      'DELETE FROM BDCOMANDO.recibeoc WHERE folio = ? AND renglon = ?',
+      [folio, renglon]
+    );
 
     await conn.commit();
     res.json({ success: true, message: 'Registro eliminado y respaldado correctamente' });
@@ -127,19 +151,4 @@ const remove = async (req, res) => {
   }
 };
 
-// ─── BUSCAR POR FOLIO ────────────────────────────────────────────────────────
-const getByFolio = async (req, res) => {
-  const { folio } = req.params;
-  try {
-    const [rows] = await pool.query(
-      'SELECT * FROM recibeoc WHERE folio = ? ORDER BY renglon',
-      [folio]
-    );
-    res.json({ success: true, data: rows });
-  } catch (err) {
-    console.error('getByFolio recibeoc:', err);
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-module.exports = { getAll, getById, update, remove, getByFolio };
+module.exports = { getAll, getByFolio, getByFolioRenglon, update, remove };

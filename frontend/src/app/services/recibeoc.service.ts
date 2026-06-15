@@ -21,10 +21,16 @@ private base = 'https://comando.mx:3450/api/recibeoc';
     return this.http.get<RecibeOC[]>(`${this.base}/folio/${folio}`);
   }
 
-  update(id: number, data: Partial<RecibeOC>): Observable<any> {
-    return this.http.put(`${this.base}/${id}`, data);
-  }
-
+update(
+  folio: number,
+  renglon: number,
+  data: Partial<RecibeOC>
+): Observable<any> {
+  return this.http.put(
+    `${this.base}/${folio}/${renglon}`,
+    data
+  );
+}
   delete(id: number, eliminadoPor: string = 'usuario'): Observable<any> {
     return this.http.delete(`${this.base}/${id}`, {
       body: { eliminado_por: eliminadoPor }

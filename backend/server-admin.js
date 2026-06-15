@@ -14,19 +14,11 @@ app.use(bodyParser.json());
 // ─────────────────────────────────────────────────────────────────────────────
 app.get('/api/recibeoc', (req, res) => {
   const sql = `
-    SELECT r.*,
-           o.depto,
-           o.forden
-    FROM recibeoc r
-    LEFT JOIN ordencompra o
-           ON r.claveg  = o.claveg
-          AND r.claves  = o.claves
-          AND r.clavec  = o.clavec
-          AND r.clavedp = o.clavedp
-          AND r.folio   = o.folio
-          AND r.renglon = o.renglon
-    ORDER BY r.id DESC
+    SELECT *
+    FROM recibeoc
+    ORDER BY folio DESC, renglon
   `;
+
   db.query(sql, (err, rows) => {
     if (err) return res.status(500).json(err);
     res.json(rows);
@@ -63,54 +55,76 @@ app.get('/api/recibeoc/:id', (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // PUT /api/recibeoc/:id
 // ─────────────────────────────────────────────────────────────────────────────
-app.put('/api/recibeoc/:id', (req, res) => {
-  const { id } = req.params;
+app.put('/api/recibeoc/:folio/:renglon', (req, res) => {
+  const { folio, renglon } = req.params;
+
   const {
-    folio, cantidad, frecibida, hrecibida, renglon, factura,
-    observacion, nosemana, umedida, precio, claveg, claves,
-    clavedp, clavec, clavepro, material, provedor, usuario,
-    horaini, horafin, fechafac, estatus
+    cantidad,
+    frecibida,
+    factura,
+    observacion,
+    umedida,
+    precio,
+    claveg,
+    claves,
+    clavec,
+    clavepro,
+    material,
+    provedor,
+    estatus
   } = req.body;
 
   const sql = `
     UPDATE recibeoc SET
-      folio       = ?,
       cantidad    = ?,
       frecibida   = ?,
-      hrecibida   = ?,
-      renglon     = ?,
       factura     = ?,
       observacion = ?,
-      nosemana    = ?,
       umedida     = ?,
       precio      = ?,
       claveg      = ?,
       claves      = ?,
-      clavedp     = ?,
       clavec      = ?,
       clavepro    = ?,
       material    = ?,
       provedor    = ?,
-      usuario     = ?,
-      horaini     = ?,
-      horafin     = ?,
-      fechafac    = ?,
       estatus     = ?
-    WHERE id = ?
+    WHERE folio = ? AND renglon = ?
   `;
 
-  db.query(sql, [
-    folio, cantidad, frecibida, hrecibida, renglon, factura,
-    observacion, nosemana, umedida, precio, claveg, claves,
-    clavedp, clavec, clavepro, material, provedor, usuario,
-    horaini, horafin, fechafac, estatus,
-    id
-  ], (err, result) => {
-    if (err) return res.status(500).json(err);
-    if (result.affectedRows === 0)
-      return res.status(404).json({ error: 'Registro no encontrado' });
-    res.json({ message: 'Registro actualizado correctamente' });
-  });
+  db.query(
+    sql,
+    [
+      cantidad,
+      frecibida,
+      factura,
+      observacion,
+      umedida,
+      precio,
+      claveg,
+      claves,
+      clavec,
+      clavepro,
+      material,
+      provedor,
+      estatus,
+      folio,
+      renglon
+    ],
+    (err, result) => {
+      if (err) return res.status(500).json(err);
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          error: 'Registro no encontrado'
+        });
+      }
+
+      res.json({
+        message: 'Registro actualizado correctamente'
+      });
+    }
+  );
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -120,7 +134,7 @@ app.delete('/api/recibeoc/:id', (req, res) => {
   const { id } = req.params;
   const eliminado_por = req.body.eliminado_por || 'sistema';
 
-  db.query('SELECT * FROM recibeoc WHERE id = ?', [id], (err, rows) => {
+  db.query('SELECT * FROM recibeoc WHERE folio = ?', [id], (err, rows) => {
     if (err) return res.status(500).json(err);
     if (!rows.length) return res.status(404).json({ error: 'Registro no encontrado' });
 

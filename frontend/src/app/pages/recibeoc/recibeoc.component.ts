@@ -68,18 +68,26 @@ export class RecibeocComponent {
   cancelarEdicion(): void {
     this.registroEditando = null;
   }
+guardar(): void {
+  if (!this.registroEditando) return;
+  console.log(this.registroEditando);
 
-  guardar(): void {
-    if (!this.registroEditando) return;
-    this.svcRecibeoc.update(this.registroEditando.id, this.registroEditando).subscribe({
-      next: () => {
-        this.mostrarMensaje('Registro actualizado correctamente', 'success');
-        this.registroEditando = null;
-        this.buscarRecibeoc();
-      },
-      error: () => this.mostrarMensaje('Error al actualizar', 'error')
-    });
-  }
+  this.svcRecibeoc.update(
+    this.registroEditando.folio,
+    this.registroEditando.renglon,
+    this.registroEditando
+  ).subscribe({
+    next: () => {
+      this.mostrarMensaje('Registro actualizado correctamente', 'success');
+      this.registroEditando = null;
+      this.buscarRecibeoc();
+    },
+    error: (err) => {
+      console.error(err);
+      this.mostrarMensaje('Error al actualizar', 'error');
+    }
+  });
+}
 
   eliminar(id: number): void {
     if (!confirm('¿Eliminar este registro? Se guardará un respaldo automáticamente.')) return;

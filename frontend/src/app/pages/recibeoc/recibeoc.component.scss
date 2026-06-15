@@ -30,16 +30,11 @@ $text-dim: #7ec8d8;
   }
 }
 
-// ─── Layout doble panel ───────────────────────────────────────────────────────
-.doble-panel {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
-  align-items: start;
-
-  @media (max-width: 1100px) {
-    grid-template-columns: 1fr;
-  }
+// ─── Layout paneles apilados ──────────────────────────────────────────────────
+.paneles-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 // ─── Panel ────────────────────────────────────────────────────────────────────
@@ -211,7 +206,7 @@ table {
 }
 
 .col-material {
-  max-width: 140px;
+  max-width: 260px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
