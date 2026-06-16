@@ -78,7 +78,7 @@
             </td>
             <td class="acciones">
               <button class="btn btn-sm btn-edit" (click)="editar(r)" title="Editar">✏️</button>
-              <button class="btn btn-sm btn-delete" (click)="eliminar(r.id)" title="Eliminar">🗑️</button>
+              <button class="btn btn-sm btn-delete" (click)="eliminar(r)" title="Eliminar">🗑️</button>
             </td>
           </tr>
         </tbody>
@@ -86,6 +86,82 @@
     </div>
 
   </div><!-- /panel recepción OC -->
+
+  <!-- ── PANEL MEDIO: Registros Eliminados ──────────────────────────────── -->
+  <div class="panel panel-backup">
+
+    <div class="panel-header">
+      <div class="panel-titulo">
+        <span class="panel-icono">♻️</span>
+        <span>Registros Eliminados - recibeoc</span>
+      </div>
+      <div class="search-bar">
+        <input
+          type="number"
+          [(ngModel)]="folioBackup"
+          placeholder="Folio..."
+          (keyup.enter)="buscarBackup()"
+        />
+        <button class="btn btn-primary btn-sm" (click)="buscarBackup()">Buscar</button>
+        <button class="btn btn-secondary btn-sm" (click)="limpiarBackup()">✕</button>
+      </div>
+    </div>
+
+    <!-- Spinner -->
+    <div *ngIf="cargandoBackup" class="spinner-wrap">
+      <span class="spinner"></span> Buscando...
+    </div>
+
+    <!-- Estado vacío inicial -->
+    <div *ngIf="!cargandoBackup && !busquedaBackupHecha" class="estado-vacio">
+      🔍 Ingresa un folio para ver sus registros eliminados
+    </div>
+
+    <!-- Sin resultados -->
+    <div *ngIf="!cargandoBackup && busquedaBackupHecha && registrosBackup.length === 0" class="estado-vacio">
+      No hay registros eliminados para el folio <strong>{{ folioBackup }}</strong>
+    </div>
+
+    <!-- Tabla Backup -->
+    <div class="tabla-wrap" *ngIf="!cargandoBackup && registrosBackup.length > 0">
+      <div class="conteo">{{ registrosBackup.length }} registro(s) eliminado(s)</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Folio</th>
+            <th>Reng.</th>
+            <th>Material</th>
+            <th>Proveedor</th>
+            <th>Cantidad</th>
+            <th>F. Recibida</th>
+            <th>Factura</th>
+            <th>F. Eliminación</th>
+            <th>Eliminado por</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of registrosBackup">
+            <td>{{ r.folio }}</td>
+            <td>{{ r.renglon }}</td>
+            <td class="col-material" [title]="r.material">{{ r.material }}</td>
+            <td class="col-material" [title]="r.provedor">{{ r.provedor }}</td>
+            <td>{{ r.cantidad }}</td>
+            <td>{{ r.frecibida | date:'dd/MM/yy' }}</td>
+            <td>{{ r.factura }}</td>
+            <td>{{ r['fecha_eliminacion'] | date:'dd/MM/yy HH:mm' }}</td>
+            <td>{{ r['eliminado_por'] }}</td>
+            <td>
+              <button class="btn btn-sm btn-restore" (click)="recuperar(r)" title="Recuperar registro">
+                ↩ Recuperar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /panel backup -->
 
   <!-- ── PANEL INFERIOR: Orden de Compra ────────────────────────────────── -->
   <div class="panel">

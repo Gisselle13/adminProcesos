@@ -13,8 +13,8 @@ private base = 'https://comando.mx:3450/api/recibeoc';
     return this.http.get<RecibeOC[]>(this.base);
   }
 
-  getById(id: number): Observable<RecibeOC> {
-    return this.http.get<RecibeOC>(`${this.base}/${id}`);
+  getByFolioRenglon(folio: number, renglon: number): Observable<RecibeOC> {
+    return this.http.get<RecibeOC>(`${this.base}/${folio}/${renglon}`);
   }
 
   getByFolio(folio: number): Observable<RecibeOC[]> {
@@ -31,9 +31,21 @@ update(
     data
   );
 }
-  delete(id: number, eliminadoPor: string = 'usuario'): Observable<any> {
-    return this.http.delete(`${this.base}/${id}`, {
+  delete(folio: number, renglon: number, eliminadoPor: string = 'usuario'): Observable<any> {
+    return this.http.delete(`${this.base}/${folio}/${renglon}`, {
       body: { eliminado_por: eliminadoPor }
     });
+  }
+
+  getBackup(): Observable<RecibeOC[]> {
+    return this.http.get<RecibeOC[]>(`${this.base}/backup`);
+  }
+
+  getBackupByFolio(folio: number): Observable<RecibeOC[]> {
+    return this.http.get<RecibeOC[]>(`${this.base}/backup/folio/${folio}`);
+  }
+
+  restore(folio: number, renglon: number): Observable<any> {
+    return this.http.post(`${this.base}/backup/${folio}/${renglon}/restore`, {});
   }
 }

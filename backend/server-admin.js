@@ -41,15 +41,19 @@ app.get('/api/recibeoc/folio/:folio', (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GET /api/recibeoc/:id
+// GET /api/recibeoc/:folio/:renglon
 // ─────────────────────────────────────────────────────────────────────────────
-app.get('/api/recibeoc/:id', (req, res) => {
-  const { id } = req.params;
-  db.query('SELECT * FROM recibeoc WHERE folio = ?', [id], (err, rows) => {
-    if (err) return res.status(500).json(err);
-    if (!rows.length) return res.status(404).json({ error: 'Registro no encontrado' });
-    res.json(rows[0]);
-  });
+app.get('/api/recibeoc/:folio/:renglon', (req, res) => {
+  const { folio, renglon } = req.params;
+  db.query(
+    'SELECT * FROM recibeoc WHERE folio = ? AND renglon = ?',
+    [folio, renglon],
+    (err, rows) => {
+      if (err) return res.status(500).json(err);
+      if (!rows.length) return res.status(404).json({ error: 'Registro no encontrado' });
+      res.json(rows[0]);
+    }
+  );
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -128,43 +132,136 @@ app.put('/api/recibeoc/:folio/:renglon', (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DELETE /api/recibeoc/:id  →  eliminar + backup
+// DELETE /api/recibeoc/:folio/:renglon  →  eliminar + backup
 // ─────────────────────────────────────────────────────────────────────────────
-app.delete('/api/recibeoc/:id', (req, res) => {
-  const { id } = req.params;
+app.delete('/api/recibeoc/:folio/:renglon', (req, res) => {
+  const { folio, renglon } = req.params;
   const eliminado_por = req.body.eliminado_por || 'sistema';
 
-  db.query('SELECT * FROM recibeoc WHERE folio = ?', [id], (err, rows) => {
-    if (err) return res.status(500).json(err);
-    if (!rows.length) return res.status(404).json({ error: 'Registro no encontrado' });
+  db.query(
+    'SELECT * FROM recibeoc WHERE folio = ? AND renglon = ?',
+    [folio, renglon],
+    (err, rows) => {
+      if (err) return res.status(500).json(err);
+      if (!rows.length) return res.status(404).json({ error: 'Registro no encontrado' });
 
-    const r = rows[0];
+      const r = rows[0];
 
-    const sqlBackup = `
-      INSERT INTO recibeoc_backup (
-        id_original, folio, cantidad, frecibida, hrecibida,
-        renglon, factura, observacion, nosemana, umedida, precio,
-        claveg, claves, clavedp, clavec, clavepro, material,
-        provedor, usuario, horaini, horafin, fechafac, estatus,
-        fecha_eliminacion, eliminado_por
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)
-    `;
+      const sqlBackup = `
+        INSERT INTO recibeoc_backup (
+          id, folio, cantidad, frecibida, hrecibida,
+          renglon, factura, observacion, nosemana, umedida, precio,
+          claveg, claves, clavedp, clavec, clavepro, material,
+          provedor, usuario, horaini, horafin, fechafac, estatus,
+          fecha_eliminacion, eliminado_por
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)
+      `;
 
-    db.query(sqlBackup, [
-      r.id, r.folio, r.cantidad, r.frecibida, r.hrecibida,
-      r.renglon, r.factura, r.observacion, r.nosemana, r.umedida, r.precio,
-      r.claveg, r.claves, r.clavedp, r.clavec, r.clavepro, r.material,
-      r.provedor, r.usuario, r.horaini, r.horafin, r.fechafac, r.estatus,
-      eliminado_por
-    ], (errBackup) => {
-      if (errBackup) return res.status(500).json(errBackup);
+      db.query(sqlBackup, [
+        r.id, r.folio, r.cantidad, r.frecibida, r.hrecibida,
+        r.renglon, r.factura, r.observacion, r.nosemana, r.umedida, r.precio,
+        r.claveg, r.claves, r.clavedp, r.clavec, r.clavepro, r.material,
+        r.provedor, r.usuario, r.horaini, r.horafin, r.fechafac, r.estatus,
+        eliminado_por
+      ], (errBackup) => {
+        if (errBackup) return res.status(500).json(errBackup);
 
-      db.query('DELETE FROM recibeoc WHERE folio = ?', [id], (errDel) => {
-        if (errDel) return res.status(500).json(errDel);
-        res.json({ message: 'Registro eliminado y respaldado correctamente' });
+        db.query(
+          'DELETE FROM recibeoc WHERE folio = ? AND renglon = ?',
+          [folio, renglon],
+          (errDel) => {
+            if (errDel) return res.status(500).json(errDel);
+            res.json({ message: 'Registro eliminado y respaldado correctamente' });
+          }
+        );
       });
-    });
-  });
+    }
+  );
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/recibeoc/backup                → todos los registros eliminados
+// GET /api/recibeoc/backup/folio/:folio   → eliminados filtrados por folio
+// ─────────────────────────────────────────────────────────────────────────────
+app.get('/api/recibeoc/backup', (req, res) => {
+  db.query(
+    'SELECT * FROM recibeoc_backup ORDER BY fecha_eliminacion DESC',
+    (err, rows) => {
+      if (err) return res.status(500).json(err);
+      res.json(rows);
+    }
+  );
+});
+
+app.get('/api/recibeoc/backup/folio/:folio', (req, res) => {
+  const { folio } = req.params;
+  db.query(
+    'SELECT * FROM recibeoc_backup WHERE folio = ? ORDER BY renglon',
+    [folio],
+    (err, rows) => {
+      if (err) return res.status(500).json(err);
+      res.json(rows);
+    }
+  );
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/recibeoc/backup/:folio/:renglon/restore  →  recuperar registro
+// ─────────────────────────────────────────────────────────────────────────────
+app.post('/api/recibeoc/backup/:folio/:renglon/restore', (req, res) => {
+  const { folio, renglon } = req.params;
+
+  // 1. Buscar en backup
+  db.query(
+    'SELECT * FROM recibeoc_backup WHERE folio = ? AND renglon = ? ORDER BY fecha_eliminacion DESC LIMIT 1',
+    [folio, renglon],
+    (err, rows) => {
+      if (err) return res.status(500).json(err);
+      if (!rows.length) return res.status(404).json({ error: 'Registro no encontrado en el backup' });
+
+      const r = rows[0];
+
+      // 2. Verificar que no exista ya en la tabla activa
+      db.query(
+        'SELECT folio FROM recibeoc WHERE folio = ? AND renglon = ?',
+        [folio, renglon],
+        (errCheck, existe) => {
+          if (errCheck) return res.status(500).json(errCheck);
+          if (existe.length > 0)
+            return res.status(409).json({ error: 'Ya existe un registro activo con ese folio y renglon' });
+
+          // 3. Reinsertar en la tabla original
+          const sqlRestore = `
+            INSERT INTO recibeoc (
+              folio, cantidad, frecibida, hrecibida, renglon, factura,
+              observacion, nosemana, umedida, precio, claveg, claves, clavedp,
+              clavec, clavepro, material, provedor, usuario, horaini, horafin,
+              fechafac, estatus
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `;
+
+          db.query(sqlRestore, [
+            r.folio, r.cantidad, r.frecibida, r.hrecibida, r.renglon, r.factura,
+            r.observacion, r.nosemana, r.umedida, r.precio, r.claveg, r.claves,
+            r.clavedp, r.clavec, r.clavepro, r.material, r.provedor, r.usuario,
+            r.horaini, r.horafin, r.fechafac, r.estatus
+          ], (errRestore) => {
+            if (errRestore) return res.status(500).json(errRestore);
+
+            // 4. Eliminar del backup
+            db.query(
+              'DELETE FROM recibeoc_backup WHERE folio = ? AND renglon = ?',
+              [folio, renglon],
+              (errDel) => {
+                if (errDel) return res.status(500).json(errDel);
+                res.json({ message: 'Registro recuperado correctamente' });
+              }
+            );
+          });
+        }
+      );
+    }
+  );
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

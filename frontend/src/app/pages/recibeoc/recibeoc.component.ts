@@ -27,7 +27,12 @@ export class RecibeocComponent {
   cargandoOC = false;
   busquedaOCHecha = false;
 
-  // ── Mensaje global ────────────────────────────────────────────────────────
+  // ── Backup / Registros eliminados ─────────────────────────────────────────
+  folioBackup: number | null = null;
+  registrosBackup: RecibeOC[] = [];
+  cargandoBackup = false;
+  busquedaBackupHecha = false;
+
   mensaje = '';
   tipoMensaje: 'success' | 'error' | '' = '';
 
@@ -89,14 +94,53 @@ guardar(): void {
   });
 }
 
-  eliminar(id: number): void {
+  eliminar(r: RecibeOC): void {
     if (!confirm('¿Eliminar este registro? Se guardará un respaldo automáticamente.')) return;
-    this.svcRecibeoc.delete(id).subscribe({
+    this.svcRecibeoc.delete(r.folio, r.renglon).subscribe({
       next: () => {
         this.mostrarMensaje('Registro eliminado y respaldado', 'success');
         this.buscarRecibeoc();
       },
       error: () => this.mostrarMensaje('Error al eliminar', 'error')
+    });
+  }
+
+  buscarBackup(): void {
+    if (!this.folioBackup) return;
+    this.cargandoBackup = true;
+    this.busquedaBackupHecha = false;
+    this.svcRecibeoc.getBackupByFolio(this.folioBackup).subscribe({
+      next: rows => {
+        this.registrosBackup = rows ?? [];
+        this.cargandoBackup = false;
+        this.busquedaBackupHecha = true;
+      },
+      error: () => {
+        this.mostrarMensaje('Error al buscar en registros eliminados', 'error');
+        this.cargandoBackup = false;
+        this.busquedaBackupHecha = true;
+      }
+    });
+  }
+
+  limpiarBackup(): void {
+    this.folioBackup = null;
+    this.registrosBackup = [];
+    this.busquedaBackupHecha = false;
+  }
+
+  recuperar(r: RecibeOC): void {
+    if (!confirm(`¿Recuperar el renglon ${r.renglon} del folio ${r.folio}?`)) return;
+    this.svcRecibeoc.restore(r.folio, r.renglon).subscribe({
+      next: () => {
+        this.mostrarMensaje('Registro recuperado correctamente', 'success');
+        this.buscarBackup();
+        if (this.folioRecibeoc === r.folio) this.buscarRecibeoc();
+      },
+      error: (err) => {
+        const msg = err?.error?.error || 'Error al recuperar el registro';
+        this.mostrarMensaje(msg, 'error');
+      }
     });
   }
 

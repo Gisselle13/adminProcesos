@@ -47,6 +47,14 @@ $text-dim: #7ec8d8;
   display: flex;
   flex-direction: column;
   min-height: 220px;
+
+  &.panel-backup {
+    border-color: rgba(0,230,118,.25);
+    box-shadow: 0 0 18px rgba(0,230,118,.06);
+
+    .panel-header { border-bottom-color: rgba(0,230,118,.5); }
+    .panel-titulo { color: $success; text-shadow: 0 0 8px rgba(0,230,118,.3); }
+  }
 }
 
 .panel-header {
@@ -159,6 +167,8 @@ $text-dim: #7ec8d8;
   &-secondary { background: $bg3; color: $text-dim; border: 1px solid $border; }
   &-edit      { background: $warning; color: $bg; }
   &-delete    { background: $danger;  color: #fff; }
+  &-restore   { background: rgba(0,230,118,.15); color: $success; border: 1px solid rgba(0,230,118,.4);
+                &:hover { background: rgba(0,230,118,.28); filter: none; } }
   &-sm        { padding: .3rem .6rem; font-size: .8rem; }
 }
 

@@ -25,6 +25,9 @@ export interface RecibeOC {
   // join con ordencompra
   depto?: string;
   forden?: string;
+  // campos de backup
+  fecha_eliminacion?: string;
+  eliminado_por?: string;
 }
 
 export interface OrdenCompra {
