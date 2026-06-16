@@ -159,7 +159,7 @@ app.delete('/api/recibeoc/:id', (req, res) => {
     ], (errBackup) => {
       if (errBackup) return res.status(500).json(errBackup);
 
-      db.query('DELETE FROM recibeoc WHERE id = ?', [id], (errDel) => {
+      db.query('DELETE FROM recibeoc WHERE folio = ?', [id], (errDel) => {
         if (errDel) return res.status(500).json(errDel);
         res.json({ message: 'Registro eliminado y respaldado correctamente' });
       });

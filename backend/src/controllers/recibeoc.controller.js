@@ -151,4 +151,95 @@ const remove = async (req, res) => {
   }
 };
 
-module.exports = { getAll, getByFolio, getByFolioRenglon, update, remove };
+// ─── CONSULTAR REGISTROS ELIMINADOS DEL BACKUP ──────────────────────────────
+const getBackup = async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM recibeoc_backup ORDER BY fecha_eliminacion DESC'
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error('getBackup recibeoc:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── CONSULTAR BACKUP POR FOLIO ──────────────────────────────────────────────
+const getBackupByFolio = async (req, res) => {
+  const { folio } = req.params;
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM recibeoc_backup WHERE folio = ? ORDER BY renglon ASC',
+      [folio]
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error('getBackupByFolio recibeoc:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ─── RECUPERAR REGISTRO DEL BACKUP POR FOLIO + RENGLON ──────────────────────
+const restore = async (req, res) => {
+  const { folio, renglon } = req.params;
+  const conn = await pool.getConnection();
+
+  try {
+    await conn.beginTransaction();
+
+    // 1. Buscar en backup por folio + renglon
+    const [rows] = await conn.query(
+      'SELECT * FROM recibeoc_backup WHERE folio = ? AND renglon = ? ORDER BY fecha_eliminacion DESC LIMIT 1',
+      [folio, renglon]
+    );
+    if (rows.length === 0) {
+      await conn.rollback();
+      return res.status(404).json({ success: false, message: 'Registro no encontrado en el backup' });
+    }
+
+    const r = rows[0];
+
+    // 2. Verificar que no exista ya en la tabla original
+    const [existe] = await conn.query(
+      'SELECT id FROM BDCOMANDO.recibeoc WHERE folio = ? AND renglon = ?',
+      [folio, renglon]
+    );
+    if (existe.length > 0) {
+      await conn.rollback();
+      return res.status(409).json({ success: false, message: 'Ya existe un registro activo con ese folio y renglon' });
+    }
+
+    // 3. Reinsertar en la tabla original
+    await conn.query(
+      `INSERT INTO BDCOMANDO.recibeoc (
+        folio, cantidad, frecibida, hrecibida, renglon, factura,
+        observacion, nosemana, umedida, precio, claveg, claves, clavedp,
+        clavec, clavepro, material, provedor, usuario, horaini, horafin,
+        fechafac, estatus
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        r.folio, r.cantidad, r.frecibida, r.hrecibida, r.renglon, r.factura,
+        r.observacion, r.nosemana, r.umedida, r.precio, r.claveg, r.claves,
+        r.clavedp, r.clavec, r.clavepro, r.material, r.provedor, r.usuario,
+        r.horaini, r.horafin, r.fechafac, r.estatus
+      ]
+    );
+
+    // 4. Eliminar del backup
+    await conn.query(
+      'DELETE FROM recibeoc_backup WHERE folio = ? AND renglon = ?',
+      [folio, renglon]
+    );
+
+    await conn.commit();
+    res.json({ success: true, message: 'Registro recuperado correctamente' });
+  } catch (err) {
+    await conn.rollback();
+    console.error('restore recibeoc:', err);
+    res.status(500).json({ success: false, message: err.message });
+  } finally {
+    conn.release();
+  }
+};
+
+module.exports = { getAll, getByFolio, getByFolioRenglon, update, remove, getBackup, getBackupByFolio, restore };

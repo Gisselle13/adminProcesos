@@ -1,0 +1,15 @@
+Options -MultiViews
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /adminprocesos/
+
+  # Si el archivo existe físicamente, servirlo directo
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Todo lo demás → index.html
+  RewriteRule ^ index.html [L]
+</IfModule>

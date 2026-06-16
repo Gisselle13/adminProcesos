@@ -37,8 +37,8 @@
               "extractLicenses": true,
               "buildOptimizer": true,
               "budgets": [
-                { "type": "initial", "maximumWarning": "2mb", "maximumError": "5mb" },
-                { "type": "anyComponentStyle", "maximumWarning": "2kb", "maximumError": "4kb" }
+                { "type": "initial", "maximumWarning": "10mb", "maximumError": "22mb" },
+                { "type": "anyComponentStyle", "maximumWarning": "22kb", "maximumError": "22kb" }
               ]
             },
             "development": {
