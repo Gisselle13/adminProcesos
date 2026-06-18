@@ -26,6 +26,7 @@ export class RecibeocComponent {
   ordenesCompra: OrdenCompra[] = [];
   cargandoOC = false;
   busquedaOCHecha = false;
+  registroOCEditando: OrdenCompra | null = null;
 
   // ── Backup / Registros eliminados ─────────────────────────────────────────
   folioBackup: number | null = null;
@@ -73,26 +74,25 @@ export class RecibeocComponent {
   cancelarEdicion(): void {
     this.registroEditando = null;
   }
-guardar(): void {
-  if (!this.registroEditando) return;
-  console.log(this.registroEditando);
 
-  this.svcRecibeoc.update(
-    this.registroEditando.folio,
-    this.registroEditando.renglon,
-    this.registroEditando
-  ).subscribe({
-    next: () => {
-      this.mostrarMensaje('Registro actualizado correctamente', 'success');
-      this.registroEditando = null;
-      this.buscarRecibeoc();
-    },
-    error: (err) => {
-      console.error(err);
-      this.mostrarMensaje('Error al actualizar', 'error');
-    }
-  });
-}
+  guardar(): void {
+    if (!this.registroEditando) return;
+    this.svcRecibeoc.update(
+      this.registroEditando.folio,
+      this.registroEditando.renglon,
+      this.registroEditando
+    ).subscribe({
+      next: () => {
+        this.mostrarMensaje('Registro actualizado correctamente', 'success');
+        this.registroEditando = null;
+        this.buscarRecibeoc();
+      },
+      error: (err) => {
+        console.error(err);
+        this.mostrarMensaje('Error al actualizar', 'error');
+      }
+    });
+  }
 
   eliminar(r: RecibeOC): void {
     if (!confirm('¿Eliminar este registro? Se guardará un respaldo automáticamente.')) return;
@@ -105,6 +105,7 @@ guardar(): void {
     });
   }
 
+  // ── Métodos Backup ────────────────────────────────────────────────────────
   buscarBackup(): void {
     if (!this.folioBackup) return;
     this.cargandoBackup = true;
@@ -167,6 +168,33 @@ guardar(): void {
     this.folioOC = null;
     this.ordenesCompra = [];
     this.busquedaOCHecha = false;
+  }
+
+  editarOrden(o: OrdenCompra): void {
+    this.registroOCEditando = { ...o };
+  }
+
+  cancelarEdicionOC(): void {
+    this.registroOCEditando = null;
+  }
+
+  guardarOrden(): void {
+    if (!this.registroOCEditando) return;
+    this.svcOC.update(
+      this.registroOCEditando.folio,
+      this.registroOCEditando.renglon,
+      this.registroOCEditando
+    ).subscribe({
+      next: () => {
+        this.mostrarMensaje('Orden de compra actualizada correctamente', 'success');
+        this.registroOCEditando = null;
+        this.buscarOC();
+      },
+      error: (err) => {
+        console.error(err);
+        this.mostrarMensaje('Error al actualizar la orden de compra', 'error');
+      }
+    });
   }
 
   // ── Utilidades ────────────────────────────────────────────────────────────

@@ -6,7 +6,8 @@ import { OrdenCompra } from '../models/interfaces';
 @Injectable({ providedIn: 'root' })
 export class OrdencompraService {
 
-private base = 'https://comando.mx:3450/api/ordencompra';
+  private base = 'https://comando.mx:3450/api/ordencompra';
+
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<OrdenCompra[]> {
@@ -17,7 +18,15 @@ private base = 'https://comando.mx:3450/api/ordencompra';
     return this.http.get<OrdenCompra[]>(`${this.base}/folio/${folio}`);
   }
 
+  getByFolioRenglon(folio: number, renglon: number): Observable<OrdenCompra> {
+    return this.http.get<OrdenCompra>(`${this.base}/${folio}/${renglon}`);
+  }
+
   getByEstatus(estatus: string): Observable<OrdenCompra[]> {
     return this.http.get<OrdenCompra[]>(`${this.base}/estatus/${estatus}`);
+  }
+
+  update(folio: number, renglon: number, data: Partial<OrdenCompra>): Observable<any> {
+    return this.http.put(`${this.base}/${folio}/${renglon}`, data);
   }
 }

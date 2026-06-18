@@ -49,7 +49,7 @@
       <table>
         <thead>
           <tr>
-            <th>ID</th>
+            <!-- <th>ID</th> -->
             <th>Folio</th>
             <th>Reng.</th>
             <th>Material</th>
@@ -63,7 +63,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let r of registros">
-            <td>{{ r.id }}</td>
+            <!-- <td>{{ r.id }}</td> -->
             <td>{{ r.folio }}</td>
             <td>{{ r.renglon }}</td>
             <td class="col-material" [title]="r.material">{{ r.material }}</td>
@@ -215,6 +215,7 @@
             <th>F. Entrega</th>
             <th>Depto</th>
             <th>Estatus</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -239,6 +240,9 @@
                 {{ o.estatus === 'A' ? 'Activa' : o.estatus === 'C' ? 'Cancelada' : 'Pendiente' }}
               </span>
             </td>
+            <td class="acciones">
+              <button class="btn btn-sm btn-edit" (click)="editarOrden(o)" title="Editar">✏️</button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -250,7 +254,7 @@
 
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     MODAL EDICIÓN
+     MODAL EDICIÓN — Recepción OC
 ════════════════════════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" *ngIf="registroEditando" (click)="cancelarEdicion()">
   <div class="modal" (click)="$event.stopPropagation()">
@@ -310,6 +314,147 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
       <button class="btn btn-primary" (click)="guardar()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MODAL EDICIÓN — Orden de Compra
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="registroOCEditando" (click)="cancelarEdicionOC()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h2>✏️ Editar Orden de Compra — Folio {{ registroOCEditando.folio }} / Reng. {{ registroOCEditando.renglon }}</h2>
+
+    <div class="form-grid">
+
+      <!-- Identificación -->
+      <label>Folio
+        <input type="number" [value]="registroOCEditando.folio" disabled />
+      </label>
+      <label>Renglón
+        <input type="number" [value]="registroOCEditando.renglon" disabled />
+      </label>
+
+      <!-- Concepto y proveedor -->
+      <label class="full-width">Concepto
+        <input type="text" maxlength="80" [(ngModel)]="registroOCEditando.concepto" />
+      </label>
+      <label class="full-width">Proveedor
+        <input type="text" maxlength="50" [(ngModel)]="registroOCEditando.provedor" />
+      </label>
+
+      <!-- Cantidades y precios -->
+      <label>Cantidad
+        <input type="number" step="0.01" [(ngModel)]="registroOCEditando.cantidad" />
+      </label>
+      <label>U. Medida
+        <input type="text" maxlength="10" [(ngModel)]="registroOCEditando.umedida" />
+      </label>
+      <label>Precio
+        <input type="number" step="0.00001" [(ngModel)]="registroOCEditando.precio" />
+      </label>
+      <label>Porcentaje
+        <input type="number" step="0.01" [(ngModel)]="registroOCEditando.porcentaje" />
+      </label>
+      <label>Subtotal
+        <input type="number" step="0.01" [(ngModel)]="registroOCEditando.subtotal" />
+      </label>
+      <label>Descuento
+        <input type="number" step="0.01" [(ngModel)]="registroOCEditando.descuento" />
+      </label>
+      <label>IVA
+        <input type="number" step="0.01" [(ngModel)]="registroOCEditando.iva" />
+      </label>
+      <label>Total
+        <input type="number" step="0.01" [(ngModel)]="registroOCEditando.ttotal" />
+      </label>
+      <label>X-Total
+        <input type="number" step="0.01" [(ngModel)]="registroOCEditando.xtotal" />
+      </label>
+      <label>Moneda
+        <input type="text" maxlength="5" [(ngModel)]="registroOCEditando.moneda" />
+      </label>
+
+      <!-- Fechas -->
+      <label>F. Orden
+        <input type="date" [(ngModel)]="registroOCEditando.forden" />
+      </label>
+      <label>H. Orden
+        <input type="time" [(ngModel)]="registroOCEditando.horden" />
+      </label>
+      <label>F. Entrega
+        <input type="date" [(ngModel)]="registroOCEditando.fentrega" />
+      </label>
+      <label>F. Cancelada
+        <input type="date" [(ngModel)]="registroOCEditando.fcancelada" />
+      </label>
+      <label>F. Exp. Inicio
+        <input type="date" [(ngModel)]="registroOCEditando.fexpini" />
+      </label>
+      <label>F. Exp. Fin
+        <input type="date" [(ngModel)]="registroOCEditando.fexpfin" />
+      </label>
+
+      <!-- Claves y deptos -->
+      <label>Depto
+        <input type="text" maxlength="20" [(ngModel)]="registroOCEditando.depto" />
+      </label>
+      <label>Genera
+        <input type="text" maxlength="20" [(ngModel)]="registroOCEditando.genera" />
+      </label>
+      <label>No. Semana
+        <input type="number" [(ngModel)]="registroOCEditando.nsemana" />
+      </label>
+      <label>Folio Exp.
+        <input type="number" [(ngModel)]="registroOCEditando.folioexp" />
+      </label>
+      <label>Clave G
+        <input type="text" maxlength="10" [(ngModel)]="registroOCEditando.claveg" />
+      </label>
+      <label>Clave S
+        <input type="number" [(ngModel)]="registroOCEditando.claves" />
+      </label>
+      <label>Clave C
+        <input type="text" maxlength="10" [(ngModel)]="registroOCEditando.clavec" />
+      </label>
+      <label>Clave DP
+        <input type="text" maxlength="10" [(ngModel)]="registroOCEditando.clavedp" />
+      </label>
+      <label>Clave Pro
+        <input type="number" [(ngModel)]="registroOCEditando.clavepro" />
+      </label>
+
+      <!-- Estatus -->
+      <label>Estatus
+        <select [(ngModel)]="registroOCEditando.estatus">
+          <option value="A">Activa</option>
+          <option value="P">Pendiente</option>
+          <option value="C">Cancelada</option>
+        </select>
+      </label>
+
+      <!-- Motivo cancelación -->
+      <label class="full-width">Motivo Cancelación
+        <input type="text" maxlength="100" [(ngModel)]="registroOCEditando.motivocan" />
+      </label>
+
+      <!-- Observaciones -->
+      <label class="full-width">Observación 1
+        <textarea maxlength="100" [(ngModel)]="registroOCEditando.observa1"></textarea>
+      </label>
+      <label class="full-width">Observación 2
+        <textarea maxlength="100" [(ngModel)]="registroOCEditando.observa2"></textarea>
+      </label>
+      <label class="full-width">Observación 3
+        <textarea maxlength="100" [(ngModel)]="registroOCEditando.observa3"></textarea>
+      </label>
+
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="cancelarEdicionOC()">Cancelar</button>
+      <button class="btn btn-primary" (click)="guardarOrden()">Guardar cambios</button>
     </div>
   </div>
 </div>
