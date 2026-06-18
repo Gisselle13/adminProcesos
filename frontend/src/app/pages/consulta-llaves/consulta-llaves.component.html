@@ -1,0 +1,91 @@
+<div class="llave-page">
+
+  <!-- ── Buscador ─────────────────────────────────────────────────────────── -->
+  <div class="search-panel">
+    <div class="search-titulo">
+      <span class="search-icono">🔑</span>
+      <span>Consulta de Llaves</span>
+    </div>
+    <div class="search-bar">
+      <input
+        type="text"
+        [(ngModel)]="busqueda"
+        placeholder="Ej: A01, A02, A03, R1..."
+        maxlength="3"
+        (keyup.enter)="consultar()"
+        class="input-llave"
+      />
+      <button class="btn btn-primary" (click)="consultar()">Consultar</button>
+      <button class="btn btn-secondary" (click)="limpiar()">✕ Limpiar</button>
+    </div>
+    <p class="hint">Llaves disponibles: <strong>A01</strong> · <strong>A02</strong> · <strong>A03</strong> · <strong>R1</strong></p>
+  </div>
+
+  <!-- ── No encontrado ─────────────────────────────────────────────────────── -->
+  <div *ngIf="noEncontrado" class="not-found">
+    ❌ La llave <strong>{{ busqueda.toUpperCase() }}</strong> no existe.
+  </div>
+
+  <!-- ── Resultado ─────────────────────────────────────────────────────────── -->
+  <div *ngIf="resultado" class="resultado">
+
+    <!-- Encabezado de la llave -->
+    <div class="llave-header">
+      <span class="llave-badge">{{ resultado.id }}</span>
+      <span class="llave-nombre">{{ resultado.nombre }}</span>
+      <span *ngIf="resultado.deptoEntrada" class="depto-entrada">
+        📥 Depto entrada: {{ resultado.deptoEntrada }}
+      </span>
+    </div>
+
+    <!-- Caso especial: R1 solo muestra nota -->
+    <div *ngIf="resultado.nota" class="nota-card">
+      <span class="nota-icono">ℹ️</span>
+      <p>{{ resultado.nota }}</p>
+    </div>
+
+    <!-- Tabla de técnicas (A01, A02, A03) -->
+    <div *ngIf="resultado.tecnicas.length > 0" class="seccion">
+      <h3 class="seccion-titulo">Técnicas</h3>
+      <table class="tabla-tecnicas">
+        <thead>
+          <tr>
+            <th>Técnica</th>
+            <th>Campos</th>
+            <th>Depto salida</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of resultado.tecnicas">
+            <td class="td-tecnica">{{ t.nombre }}</td>
+            <td class="td-campos">{{ t.campos }}</td>
+            <td class="td-depto">
+              <span class="depto-badge">{{ t.deptoSalida }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Auxiliares -->
+    <div *ngIf="resultado.auxiliares.length > 0" class="seccion">
+      <h3 class="seccion-titulo">Auxiliares</h3>
+      <div *ngFor="let a of resultado.auxiliares" class="aux-grid">
+        <div class="aux-card aux-paulina">
+          <span class="aux-label">PAULINA</span>
+          <span class="aux-valor">{{ a.paulina }}</span>
+        </div>
+        <div class="aux-card aux-1">
+          <span class="aux-label">AUX 1</span>
+          <span class="aux-valor">{{ a.aux1 }}</span>
+        </div>
+        <div class="aux-card aux-2">
+          <span class="aux-label">AUX 2</span>
+          <span class="aux-valor">{{ a.aux2 }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /resultado -->
+
+</div>

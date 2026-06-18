@@ -14,6 +14,7 @@ import { UiStateService } from './services/ui-state.service';
       </div>
       <nav>
         <a routerLink="/recibeoc" routerLinkActive="active">Recepción OC</a>
+        <a routerLink="/llaves"   routerLinkActive="active">🔑 Consulta Llaves</a>
         <button
           class="nav-btn-backup"
           [class.active]="ui.mostrarBackup"
