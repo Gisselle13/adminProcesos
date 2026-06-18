@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RecibeocService } from '../../services/recibeoc.service';
 import { OrdencompraService } from '../../services/ordencompra.service';
+import { UiStateService } from '../../services/ui-state.service';
 import { RecibeOC, OrdenCompra } from '../../models/interfaces';
 
 @Component({
@@ -39,7 +40,8 @@ export class RecibeocComponent {
 
   constructor(
     private svcRecibeoc: RecibeocService,
-    private svcOC: OrdencompraService
+    private svcOC: OrdencompraService,
+    public ui: UiStateService
   ) {}
 
   // ── Métodos Recepción OC ──────────────────────────────────────────────────
@@ -172,7 +174,6 @@ export class RecibeocComponent {
 
   editarOrden(o: OrdenCompra): void {
     // Normaliza campos de fecha ISO → 'YYYY-MM-DD' que requiere input[type="date"].
-    // Si el valor es null/undefined/vacío lo deja en cadena vacía para que el input quede en blanco.
     const fechas: (keyof OrdenCompra)[] = ['forden', 'fcancelada', 'fexpini', 'fexpfin', 'fentrega'];
     const copia: any = { ...o };
     for (const campo of fechas) {

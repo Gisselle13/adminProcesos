@@ -49,7 +49,6 @@
       <table>
         <thead>
           <tr>
-            <!-- <th>ID</th> -->
             <th>Folio</th>
             <th>Reng.</th>
             <th>Material</th>
@@ -63,7 +62,6 @@
         </thead>
         <tbody>
           <tr *ngFor="let r of registros">
-            <!-- <td>{{ r.id }}</td> -->
             <td>{{ r.folio }}</td>
             <td>{{ r.renglon }}</td>
             <td class="col-material" [title]="r.material">{{ r.material }}</td>
@@ -87,8 +85,8 @@
 
   </div><!-- /panel recepción OC -->
 
-  <!-- ── PANEL MEDIO: Registros Eliminados ──────────────────────────────── -->
-  <div class="panel panel-backup">
+  <!-- ── PANEL MEDIO: Registros Eliminados (visible solo si ui.mostrarBackup) -->
+  <div class="panel panel-backup" *ngIf="ui.mostrarBackup">
 
     <div class="panel-header">
       <div class="panel-titulo">
@@ -231,24 +229,14 @@
             <td>{{ o.fentrega | date:'dd/MM/yy' }}</td>
             <td>{{ o.depto }}</td>
             <td>
-<span class="badge"
-  [ngClass]="{
-    'badge-ok':   o.estatus === '1' || o.estatus === '8',
-    'badge-pend': o.estatus === '3',
-    'badge-can':  o.estatus === '4' || o.estatus === '6' || o.estatus === '9'
-  }">
-
-  {{
-    o.estatus === '1' ? 'Activa' :
-    o.estatus === '2' ? 'Con 5%' :
-    o.estatus === '3' ? 'Registrada' :
-    o.estatus === '4' ? 'Devolución' :
-    o.estatus === '6' ? 'Inactiva' :
-    o.estatus === '8' ? 'Activa Con Parcialidad' :
-    o.estatus === '9' ? 'Depurada' :
-    'Sin Estatus'
-  }}
-</span>
+              <span class="badge"
+                [ngClass]="{
+                  'badge-ok':   o.estatus === 'A',
+                  'badge-pend': o.estatus === 'P',
+                  'badge-can':  o.estatus === 'C'
+                }">
+                {{ o.estatus === 'A' ? 'Activa' : o.estatus === 'C' ? 'Cancelada' : 'Pendiente' }}
+              </span>
             </td>
             <td class="acciones">
               <button class="btn btn-sm btn-edit" (click)="editarOrden(o)" title="Editar">✏️</button>
@@ -338,7 +326,6 @@
 
     <div class="form-grid">
 
-      <!-- Identificación -->
       <label>Folio
         <input type="number" [value]="registroOCEditando.folio" disabled />
       </label>
@@ -346,7 +333,6 @@
         <input type="number" [value]="registroOCEditando.renglon" disabled />
       </label>
 
-      <!-- Concepto y proveedor -->
       <label class="full-width">Concepto
         <input type="text" maxlength="80" [(ngModel)]="registroOCEditando.concepto" />
       </label>
@@ -354,7 +340,6 @@
         <input type="text" maxlength="50" [(ngModel)]="registroOCEditando.provedor" />
       </label>
 
-      <!-- Cantidades y precios -->
       <label>Cantidad
         <input type="number" step="0.01" [(ngModel)]="registroOCEditando.cantidad" />
       </label>
@@ -386,7 +371,6 @@
         <input type="text" maxlength="5" [(ngModel)]="registroOCEditando.moneda" />
       </label>
 
-      <!-- Fechas -->
       <label>F. Orden
         <input type="date" [(ngModel)]="registroOCEditando.forden" />
       </label>
@@ -406,7 +390,6 @@
         <input type="date" [(ngModel)]="registroOCEditando.fexpfin" />
       </label>
 
-      <!-- Claves y deptos -->
       <label>Depto
         <input type="text" maxlength="20" [(ngModel)]="registroOCEditando.depto" />
       </label>
@@ -435,25 +418,17 @@
         <input type="number" [(ngModel)]="registroOCEditando.clavepro" />
       </label>
 
-      <!-- Estatus -->
       <label>Estatus
-<select [(ngModel)]="registroOCEditando.estatus">
-  <option value="1">Activa</option>
-  <option value="2">Con 5%</option>
-  <option value="3">Registrada</option>
-  <option value="4">Devolución</option>
-  <option value="6">Inactiva</option>
-  <option value="8">Activa Con Parcialidad</option>
-  <option value="9">Depurada</option>
-</select>
+        <select [(ngModel)]="registroOCEditando.estatus">
+          <option value="A">Activa</option>
+          <option value="P">Pendiente</option>
+          <option value="C">Cancelada</option>
+        </select>
       </label>
 
-      <!-- Motivo cancelación -->
       <label class="full-width">Motivo Cancelación
         <input type="text" maxlength="100" [(ngModel)]="registroOCEditando.motivocan" />
       </label>
-
-      <!-- Observaciones -->
       <label class="full-width">Observación 1
         <textarea maxlength="100" [(ngModel)]="registroOCEditando.observa1"></textarea>
       </label>
