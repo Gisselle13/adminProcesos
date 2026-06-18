@@ -314,15 +314,49 @@ app.get('/api/ordencompra/estatus/:estatus', (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 app.put('/api/ordencompra/:folio/:renglon', (req, res) => {
   const { folio, renglon } = req.params;
+
   const {
-    forden, horden, fcancelada, motivocan, clavepro, concepto,
-    cantidad, precio, xtotal, moneda, estatus, provedor, nsemana,
-    observa1, observa2, observa3, genera, umedida, porcentaje,
-    subtotal, descuento, iva, ttotal, folioexp, fexpini, fexpfin, fentrega
+    claveg,
+    claves,
+    clavec,
+    clavedp,
+    depto,
+    forden,
+    horden,
+    fcancelada,
+    motivocan,
+    clavepro,
+    concepto,
+    cantidad,
+    precio,
+    xtotal,
+    moneda,
+    estatus,
+    provedor,
+    nsemana,
+    observa1,
+    observa2,
+    observa3,
+    genera,
+    umedida,
+    porcentaje,
+    subtotal,
+    descuento,
+    iva,
+    ttotal,
+    folioexp,
+    fexpini,
+    fexpfin,
+    fentrega
   } = req.body;
 
   const sql = `
     UPDATE ordencompra SET
+      claveg      = ?,
+      claves      = ?,
+      clavec      = ?,
+      clavedp     = ?,
+      depto       = ?,
       forden      = ?,
       horden      = ?,
       fcancelada  = ?,
@@ -354,16 +388,52 @@ app.put('/api/ordencompra/:folio/:renglon', (req, res) => {
   `;
 
   db.query(sql, [
-    forden, horden, fcancelada, motivocan, clavepro, concepto,
-    cantidad, precio, xtotal, moneda, estatus, provedor, nsemana,
-    observa1, observa2, observa3, genera, umedida, porcentaje,
-    subtotal, descuento, iva, ttotal, folioexp, fexpini, fexpfin, fentrega,
-    folio, renglon
+    claveg,
+    claves,
+    clavec,
+    clavedp,
+    depto,
+    forden,
+    horden,
+    fcancelada,
+    motivocan,
+    clavepro,
+    concepto,
+    cantidad,
+    precio,
+    xtotal,
+    moneda,
+    estatus,
+    provedor,
+    nsemana,
+    observa1,
+    observa2,
+    observa3,
+    genera,
+    umedida,
+    porcentaje,
+    subtotal,
+    descuento,
+    iva,
+    ttotal,
+    folioexp,
+    fexpini,
+    fexpfin,
+    fentrega,
+    folio,
+    renglon
   ], (err, result) => {
     if (err) return res.status(500).json(err);
-    if (result.affectedRows === 0)
-      return res.status(404).json({ error: 'Renglón no encontrado' });
-    res.json({ message: 'Orden de compra actualizada correctamente' });
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        error: 'Renglón no encontrado'
+      });
+    }
+
+    res.json({
+      message: 'Orden de compra actualizada correctamente'
+    });
   });
 });
 

@@ -231,14 +231,24 @@
             <td>{{ o.fentrega | date:'dd/MM/yy' }}</td>
             <td>{{ o.depto }}</td>
             <td>
-              <span class="badge"
-                [ngClass]="{
-                  'badge-ok':   o.estatus === 'A',
-                  'badge-pend': o.estatus === 'P',
-                  'badge-can':  o.estatus === 'C'
-                }">
-                {{ o.estatus === 'A' ? 'Activa' : o.estatus === 'C' ? 'Cancelada' : 'Pendiente' }}
-              </span>
+<span class="badge"
+  [ngClass]="{
+    'badge-ok':   o.estatus === '1' || o.estatus === '8',
+    'badge-pend': o.estatus === '3',
+    'badge-can':  o.estatus === '4' || o.estatus === '6' || o.estatus === '9'
+  }">
+
+  {{
+    o.estatus === '1' ? 'Activa' :
+    o.estatus === '2' ? 'Con 5%' :
+    o.estatus === '3' ? 'Registrada' :
+    o.estatus === '4' ? 'Devolución' :
+    o.estatus === '6' ? 'Inactiva' :
+    o.estatus === '8' ? 'Activa Con Parcialidad' :
+    o.estatus === '9' ? 'Depurada' :
+    'Sin Estatus'
+  }}
+</span>
             </td>
             <td class="acciones">
               <button class="btn btn-sm btn-edit" (click)="editarOrden(o)" title="Editar">✏️</button>
@@ -427,11 +437,15 @@
 
       <!-- Estatus -->
       <label>Estatus
-        <select [(ngModel)]="registroOCEditando.estatus">
-          <option value="A">Activa</option>
-          <option value="P">Pendiente</option>
-          <option value="C">Cancelada</option>
-        </select>
+<select [(ngModel)]="registroOCEditando.estatus">
+  <option value="1">Activa</option>
+  <option value="2">Con 5%</option>
+  <option value="3">Registrada</option>
+  <option value="4">Devolución</option>
+  <option value="6">Inactiva</option>
+  <option value="8">Activa Con Parcialidad</option>
+  <option value="9">Depurada</option>
+</select>
       </label>
 
       <!-- Motivo cancelación -->

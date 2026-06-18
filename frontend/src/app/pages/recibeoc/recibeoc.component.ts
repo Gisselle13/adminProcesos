@@ -171,7 +171,15 @@ export class RecibeocComponent {
   }
 
   editarOrden(o: OrdenCompra): void {
-    this.registroOCEditando = { ...o };
+    // Normaliza campos de fecha ISO → 'YYYY-MM-DD' que requiere input[type="date"].
+    // Si el valor es null/undefined/vacío lo deja en cadena vacía para que el input quede en blanco.
+    const fechas: (keyof OrdenCompra)[] = ['forden', 'fcancelada', 'fexpini', 'fexpfin', 'fentrega'];
+    const copia: any = { ...o };
+    for (const campo of fechas) {
+      const val = copia[campo];
+      copia[campo] = val ? (val as string).substring(0, 10) : '';
+    }
+    this.registroOCEditando = copia as OrdenCompra;
   }
 
   cancelarEdicionOC(): void {
